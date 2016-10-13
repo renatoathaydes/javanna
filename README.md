@@ -84,3 +84,30 @@ assertEquals( Example.LARGE, complex.example() );
 
 > It is an error to not provide mandatory values, or to give invalid members or values of the wrong type. All errors
   cause an `IllegalArgumentException` to be thrown by the `createAnnotation` method.
+
+## Read the values of an annotation instance as a Map
+
+To read all values of an annotation as a Map, use the `getAnnotationValues` method (example from the unit tests):
+
+```java
+@Simple( "hi" )
+@Complex( name = "hello", count = 6, simple = @Simple( "hi" ), example = Example.SMALL )
+public void canReadComplexAnnotationValues() throws Exception {
+    // get the annotations on this method
+    final Annotation simple = getClass().getMethod( "canReadComplexAnnotationValues" ).getAnnotation( Simple.class );
+    final Annotation complex = getClass().getMethod( "canReadComplexAnnotationValues" ).getAnnotation( Complex.class );
+
+    // expected values of the @Complex annotation
+    Map<String, Object> expectedValues = new LinkedHashMap<String, Object>() {{
+        put( "name", "hello" );
+        put( "count", 6 );
+        put( "simple", simple );
+        put( "example", Example.SMALL );
+    }};
+
+    // read the annotation values as a Map
+    Map<String, Object> actualValues = Javanna.getAnnotationValues( complex );
+
+    assertEquals( expectedValues, actualValues );
+}
+```
