@@ -7,9 +7,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,8 +33,8 @@ public final class Javanna {
      */
     public static <A extends Annotation> JavaAnnotation<A> parseAnnotation(
             Class<A> annotationType ) {
-        Map<String, Object> defaultValueByMember = new HashMap<>();
-        Map<String, Class<?>> typeByMember = new HashMap<>();
+        Map<String, Object> defaultValueByMember = new LinkedHashMap<>();
+        Map<String, Class<?>> typeByMember = new LinkedHashMap<>();
 
         Method[] methods = annotationType.getDeclaredMethods();
         for (Method method : methods) {

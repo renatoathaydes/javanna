@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +39,15 @@ public class JavannaTest {
         Simple simple();
 
         Example example();
+    }
+
+    @Retention( RetentionPolicy.RUNTIME )
+    @interface HasArrays {
+        int[] numbers();
+
+        String[] names();
+
+        boolean[] states() default { true, false };
     }
 
     @Test
@@ -76,6 +86,30 @@ public class JavannaTest {
             put( "example", Example.class );
         }} );
         assertEquals( new HashSet<>( Arrays.asList( "name", "count", "simple", "example" ) ), annotation.getMembers() );
+    }
+
+    @Test
+    public void canParseAnnotationWithArrayMembers() {
+        JavaAnnotation<HasArrays> annotation = Javanna.parseAnnotation( HasArrays.class );
+
+        assertEquals( HasArrays.class, annotation.getAnnotationType() );
+
+        boolean[] expectedStates = { true, false };
+
+        Map<String, Object> defaultValues = annotation.getDefaultValueByMember();
+        assertEquals( Arrays.toString( expectedStates ),
+                Arrays.toString( ( boolean[] ) defaultValues.get( "states" ) ) );
+        assertEquals( 1, defaultValues.size() );
+
+        assertEquals( new LinkedHashMap<String, Class<?>>() {{
+                          put( "numbers", int[].class );
+                          put( "names", String[].class );
+                          put( "states", boolean[].class );
+                      }},
+                annotation.getTypeByMember() );
+
+        assertEquals( new HashSet<>( Arrays.asList( "numbers", "names", "states" ) ),
+                annotation.getMembers() );
     }
 
     @Test
@@ -179,6 +213,49 @@ public class JavannaTest {
                     "* Type of member 'name' has invalid type. Expected: java.lang.String. Found: java.lang.Character\n" +
                     "* Type of member 'example' has invalid type. Expected: com.athaydes.javanna.JavannaTest$Example. " +
                     "Found: java.lang.Float", e.getMessage() );
+        }
+    }
+
+    @Test
+    public void canCreateAnnotationWithArrayValues() throws Exception {
+        HasArrays hasArrays = Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
+            put( "numbers", new int[]{ 10, 5, 0 } );
+            put( "names", new String[]{ "hi", "bye" } );
+            put( "states", new boolean[]{ true, true, false, true } );
+        }} );
+
+        assertEquals( Arrays.toString( new int[]{ 10, 5, 0 } ), Arrays.toString( hasArrays.numbers() ) );
+        assertEquals( Arrays.toString( new String[]{ "hi", "bye" } ), Arrays.toString( hasArrays.names() ) );
+        assertEquals( Arrays.toString( new boolean[]{ true, true, false, true } ), Arrays.toString( hasArrays.states() ) );
+    }
+
+    @Test
+    public void canCreateAnnotationWithPartialArrayValues() throws Exception {
+        HasArrays hasArrays = Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
+            put( "numbers", new int[]{ 10, 5, 0 } );
+            put( "names", new String[]{ "hi", "bye" } );
+        }} );
+
+        assertEquals( Arrays.toString( new int[]{ 10, 5, 0 } ), Arrays.toString( hasArrays.numbers() ) );
+        assertEquals( Arrays.toString( new String[]{ "hi", "bye" } ), Arrays.toString( hasArrays.names() ) );
+        assertEquals( Arrays.toString( new boolean[]{ true, false } ), Arrays.toString( hasArrays.states() ) );
+    }
+
+
+    @Test
+    public void cannotCreateAnnotationWithArrayValuesOfWrongType() throws Exception {
+        try {
+            Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
+                put( "numbers", new int[]{ 10, 5, 0 } );
+                put( "names", new String[]{ "hi", "bye" } );
+                put( "states", new int[]{ 2 } );
+            }} );
+
+            fail( "Should have failed" );
+        } catch ( IllegalArgumentException e ) {
+            assertEquals( "Type errors:\n" +
+                            "* Type of member 'states' has invalid type. Expected: [Z. Found: [I",
+                    e.getMessage() );
         }
     }
 
