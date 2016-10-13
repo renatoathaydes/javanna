@@ -87,7 +87,13 @@ assertEquals( Example.LARGE, complex.example() );
 
 ## Read the values of an annotation instance as a Map
 
-To read all values of an annotation as a Map, use the `getAnnotationValues` method (example from the unit tests):
+To read all values of an annotation as a Map, use the `getAnnotationValues` method:
+
+```java
+Map<String, Object> values = Javanna.getAnnotationValues( annotation );
+```
+
+Full example (from the unit tests):
 
 ```java
 @Simple( "hi" )
