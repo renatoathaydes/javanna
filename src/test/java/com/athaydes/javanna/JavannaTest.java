@@ -28,7 +28,7 @@ public class JavannaTest {
         String value();
     }
 
-    enum Example {SMALL, MEDIUM, LARGE, XXX}
+    private enum Example {SMALL, MEDIUM, LARGE, XXX}
 
     @Retention( RetentionPolicy.RUNTIME )
     @interface Complex {
@@ -79,13 +79,14 @@ public class JavannaTest {
             put( "name", "default-name" );
             put( "count", 2 );
         }}, annotation.getDefaultValueByMember() );
-        assertEquals( annotation.getTypeByMember(), new HashMap<String, Class<?>>() {{
+        assertEquals( new HashMap<String, Class<?>>() {{
             put( "name", String.class );
             put( "count", int.class );
             put( "simple", Simple.class );
             put( "example", Example.class );
-        }} );
-        assertEquals( new HashSet<>( Arrays.asList( "name", "count", "simple", "example" ) ), annotation.getMembers() );
+        }}, annotation.getTypeByMember() );
+        assertEquals( new HashSet<>( Arrays.asList( "name", "count", "simple", "example" ) ),
+                annotation.getMembers() );
     }
 
     @Test
@@ -102,14 +103,12 @@ public class JavannaTest {
         assertEquals( 1, defaultValues.size() );
 
         assertEquals( new LinkedHashMap<String, Class<?>>() {{
-                          put( "numbers", int[].class );
-                          put( "names", String[].class );
-                          put( "states", boolean[].class );
-                      }},
-                annotation.getTypeByMember() );
+            put( "numbers", int[].class );
+            put( "names", String[].class );
+            put( "states", boolean[].class );
+        }}, annotation.getTypeByMember() );
 
-        assertEquals( new HashSet<>( Arrays.asList( "numbers", "names", "states" ) ),
-                annotation.getMembers() );
+        assertEquals( new HashSet<>( Arrays.asList( "numbers", "names", "states" ) ), annotation.getMembers() );
     }
 
     @Test
