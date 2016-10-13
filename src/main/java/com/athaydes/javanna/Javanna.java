@@ -3,6 +3,7 @@ package com.athaydes.javanna;
 import com.athaydes.javanna.internal.JavannaInvocationHandler;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public final class Javanna {
      */
     public static <A extends Annotation> A createAnnotation(
             Class<A> annotationType,
-            Map<String, Object> values ) {
+            Map<String, ?> values ) {
         return createAnnotation( parseAnnotation( annotationType ), values );
     }
 
@@ -85,7 +86,7 @@ public final class Javanna {
      */
     public static <A extends Annotation> A createAnnotation(
             JavaAnnotation<A> annotation,
-            Map<String, Object> values ) {
+            Map<String, ?> values ) {
         validateValues( annotation, values );
 
         try {
@@ -98,8 +99,28 @@ public final class Javanna {
         }
     }
 
+    /**
+     * Get the values of this annotation's members.
+     *
+     * @param annotation annotation
+     * @return a Map of the values of this annotation by its member names.
+     */
+    public static Map<String, Object> getAnnotationValues( Annotation annotation ) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        Method[] methods = annotation.annotationType().getDeclaredMethods();
+
+        try {
+            for (Method method : methods) {
+                result.put( method.getName(), method.invoke( annotation ) );
+            }
+            return result;
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
+            throw new IllegalStateException( "Unexpected error invoking annotation member methods", e );
+        }
+    }
+
     private static void validateValues( JavaAnnotation<?> annotation,
-                                        Map<String, Object> values ) {
+                                        Map<String, ?> values ) {
         Set<String> mandatoryMembers = diff( annotation.getMembers(), annotation.getDefaultValueByMember().keySet() );
         Set<String> missingMembers = diff( mandatoryMembers, values.keySet() );
 
@@ -121,7 +142,7 @@ public final class Javanna {
 
         List<String> errors = new ArrayList<>( 1 );
 
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
+        for (Map.Entry<String, ?> entry : values.entrySet()) {
             String member = entry.getKey();
             Class<?> type = typeByMember.get( member );
             if ( type.isPrimitive() ) {

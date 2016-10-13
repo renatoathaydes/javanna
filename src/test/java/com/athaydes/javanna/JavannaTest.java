@@ -2,6 +2,7 @@ package com.athaydes.javanna;
 
 import org.junit.Test;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -256,6 +257,31 @@ public class JavannaTest {
                             "* Type of member 'states' has invalid type. Expected: [Z. Found: [I",
                     e.getMessage() );
         }
+    }
+
+    @Simple( "hi" )
+    @Test
+    public void canReadSimpleAnnotationValues() throws Exception {
+        Annotation simple = getClass().getMethod( "canReadSimpleAnnotationValues" ).getAnnotation( Simple.class );
+
+        assertEquals( Collections.singletonMap( "value", "hi" ), Javanna.getAnnotationValues( simple ) );
+    }
+
+    @Simple( "hi" )
+    @Complex( name = "hello", count = 6, simple = @Simple( "hi" ), example = Example.SMALL )
+    @Test
+    public void canReadComplexAnnotationValues() throws Exception {
+        final Annotation simple = getClass().getMethod( "canReadComplexAnnotationValues" ).getAnnotation( Simple.class );
+        final Annotation complex = getClass().getMethod( "canReadComplexAnnotationValues" ).getAnnotation( Complex.class );
+
+        Map<String, Object> expectedValues = new LinkedHashMap<String, Object>() {{
+            put( "name", "hello" );
+            put( "count", 6 );
+            put( "simple", simple );
+            put( "example", Example.SMALL );
+        }};
+
+        assertEquals( expectedValues, Javanna.getAnnotationValues( complex ) );
     }
 
 }
