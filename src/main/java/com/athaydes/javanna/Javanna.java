@@ -29,7 +29,7 @@ public final class Javanna {
     /**
      * Parse the annotation class.
      *
-     * @param annotationType class of annotation to parse.
+     * @param annotationType @interface of annotation to parse.
      * @return a {@link JavaAnnotation} representing the annotation.
      */
     public static <A extends Annotation> JavaAnnotation<A> parseAnnotation(
@@ -84,16 +84,16 @@ public final class Javanna {
      * @throws IllegalArgumentException if a mandatory value is missing, a value has an invalid type or values are
      *                                  provided for non-existing members.
      */
+    @SuppressWarnings( "unchecked" )
     public static <A extends Annotation> A createAnnotation(
             JavaAnnotation<A> annotation,
             Map<String, ?> values ) {
         validateValues( annotation, values );
 
         try {
-            //noinspection unchecked
             return ( A ) Proxy.newProxyInstance( annotation.getAnnotationType().getClassLoader(),
                     new Class[]{ annotation.getAnnotationType() },
-                    new JavannaInvocationHandler( annotation, values ) );
+                    new JavannaInvocationHandler( annotation, new LinkedHashMap<>( values ) ) );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
