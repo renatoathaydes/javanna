@@ -56,7 +56,7 @@ final class JavannaInvocationHandler implements InvocationHandler {
             value = annotation.getDefaultValueByMember().get( member );
         }
 
-        return value;
+        return cloneIfArray( value );
     }
 
     private Boolean isEqual( Object other ) {
@@ -162,6 +162,19 @@ final class JavannaInvocationHandler implements InvocationHandler {
         } else {
             // none is an array
             return Objects.equals( first, second );
+        }
+    }
+
+    @SuppressWarnings( "SuspiciousSystemArraycopy" )
+    private static Object cloneIfArray( Object value ) {
+        if ( value.getClass().isArray() ) {
+            Class<?> type = value.getClass().getComponentType();
+            int length = Array.getLength( value );
+            Object clone = Array.newInstance( type, length );
+            System.arraycopy( value, 0, clone, 0, length );
+            return clone;
+        } else {
+            return value;
         }
     }
 

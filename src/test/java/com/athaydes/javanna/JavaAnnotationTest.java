@@ -162,6 +162,24 @@ public class JavaAnnotationTest {
         assertFalse( javannaAnnotation.equals( jvmAnnotation ) );
     }
 
+    @Test
+    public void annotationArraysShouldNeverBeModified() {
+        JavannaTest.HasArrays hasArrays = Javanna.createAnnotation( JavannaTest.HasArrays.class, new LinkedHashMap<String, Object>() {{
+            put( "numbers", new int[]{ 4, 5 } );
+            put( "names", new String[ 0 ] );
+            put( "states", new boolean[ 0 ] );
+        }} );
+
+        assertEquals( 4, hasArrays.numbers()[ 0 ] );
+        assertEquals( 5, hasArrays.numbers()[ 1 ] );
+
+        hasArrays.numbers()[ 0 ] = 20;
+        hasArrays.numbers()[ 1 ] = 44;
+
+        assertEquals( 4, hasArrays.numbers()[ 0 ] );
+        assertEquals( 5, hasArrays.numbers()[ 1 ] );
+    }
+
     private static Class<? extends Annotation> helloClass() {
         return Hello.class;
     }
