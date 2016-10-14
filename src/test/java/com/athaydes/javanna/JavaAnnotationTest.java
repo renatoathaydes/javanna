@@ -64,7 +64,7 @@ public class JavaAnnotationTest {
     @Test
     public void javannaAnnotationHasHashCode() {
         Annotation javannaAnnotation = Javanna.parseAnnotation( helloClass() )
-                .create( new HashMap<String, Object>() {{
+                .create( new LinkedHashMap<String, Object>() {{
                     put( "value", "Olá" );
                     put( "language", "português" );
                 }} );
@@ -84,6 +84,18 @@ public class JavaAnnotationTest {
     }
 
     @Test
+    public void javannaAnnotationWithArraysHasToString() {
+        Annotation hasArrays = Javanna.createAnnotation( JavannaTest.HasArrays.class, new LinkedHashMap<String, Object>() {{
+            put( "numbers", new int[]{ 10, 5, 0 } );
+            put( "names", new String[]{ "hi", "bye" } );
+            put( "states", new boolean[]{ true, true, false, true } );
+        }} );
+
+        assertEquals( JavannaTest.HasArrays.class.getName() +
+                "(numbers={10, 5, 0}, names={hi, bye}, states={true, true, false, true})", hasArrays.toString() );
+    }
+
+    @Test
     public void javannaAnnotationClassIsAnnotation() {
         Annotation javannaAnnotation = Javanna.parseAnnotation( JavannaTest.Empty.class )
                 .create( Collections.<String, Object>emptyMap() );
@@ -97,7 +109,7 @@ public class JavaAnnotationTest {
     public void annotationCreatedByJVMEqualsJavannaWithSameValue() throws Exception {
         Annotation jvmAnnotation = getClass().getMethod( "annotationCreatedByJVMEqualsJavannaWithSameValue" )
                 .getAnnotation( helloClass() );
-        Annotation javannaAnnotation = Javanna.createAnnotation( helloClass(), new HashMap<String, Object>() {{
+        Annotation javannaAnnotation = Javanna.createAnnotation( helloClass(), new LinkedHashMap<String, Object>() {{
             put( "value", "Privyet" );
             put( "language", "russian" );
         }} );
@@ -111,9 +123,39 @@ public class JavaAnnotationTest {
     public void annotationCreatedByJVMDoesNotEqualJavannaWithDifferentValues() throws Exception {
         Annotation jvmAnnotation = getClass().getMethod( "annotationCreatedByJVMDoesNotEqualJavannaWithDifferentValues" )
                 .getAnnotation( helloClass() );
-        Annotation javannaAnnotation = Javanna.createAnnotation( helloClass(), new HashMap<String, Object>() {{
+        Annotation javannaAnnotation = Javanna.createAnnotation( helloClass(), new LinkedHashMap<String, Object>() {{
             put( "value", "Privyet" );
             put( "language", "russian" );
+        }} );
+
+        assertFalse( jvmAnnotation.equals( javannaAnnotation ) );
+        assertFalse( javannaAnnotation.equals( jvmAnnotation ) );
+    }
+
+    @JavannaTest.HasArrays( numbers = { 4, 5 }, names = { "joe" }, states = { } )
+    @Test
+    public void annotationCreatedByJVMEqualsJavannaWithSameValueWithArray() throws Exception {
+        Annotation jvmAnnotation = getClass().getMethod( "annotationCreatedByJVMEqualsJavannaWithSameValueWithArray" )
+                .getAnnotation( JavannaTest.HasArrays.class );
+        Annotation javannaAnnotation = Javanna.createAnnotation( JavannaTest.HasArrays.class, new LinkedHashMap<String, Object>() {{
+            put( "numbers", new int[]{ 4, 5 } );
+            put( "names", new String[]{ "joe" } );
+            put( "states", new boolean[ 0 ] );
+        }} );
+
+        assertTrue( jvmAnnotation.equals( javannaAnnotation ) );
+        assertTrue( javannaAnnotation.equals( jvmAnnotation ) );
+    }
+
+    @JavannaTest.HasArrays( numbers = { 4, 5 }, names = { "joe" }, states = { true } )
+    @Test
+    public void annotationCreatedByJVMDoesNotEqualJavannaWithDifferentValueWithArray() throws Exception {
+        Annotation jvmAnnotation = getClass().getMethod( "annotationCreatedByJVMDoesNotEqualJavannaWithDifferentValueWithArray" )
+                .getAnnotation( JavannaTest.HasArrays.class );
+        Annotation javannaAnnotation = Javanna.createAnnotation( JavannaTest.HasArrays.class, new LinkedHashMap<String, Object>() {{
+            put( "numbers", new int[]{ 4, 5 } );
+            put( "names", new String[]{ "joe" } );
+            put( "states", new boolean[]{ false } ); // this is different
         }} );
 
         assertFalse( jvmAnnotation.equals( javannaAnnotation ) );

@@ -4,9 +4,11 @@ import com.athaydes.javanna.JavaAnnotation;
 import com.athaydes.javanna.Javanna;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 
 public final class JavannaInvocationHandler implements InvocationHandler {
 
@@ -68,7 +70,7 @@ public final class JavannaInvocationHandler implements InvocationHandler {
 
             Map<String, Object> otherValues = Javanna.getAnnotationValues( otherAnnotation );
 
-            return values.equals( otherValues );
+            return mapsAreEqual( values, otherValues );
         }
 
         return false;
@@ -83,7 +85,10 @@ public final class JavannaInvocationHandler implements InvocationHandler {
         int index = 0;
 
         for (Map.Entry<String, ?> entry : values.entrySet()) {
-            builder.append( entry.getKey() ).append( "=" ).append( entry.getValue() );
+            builder.append( entry.getKey() )
+                    .append( "=" )
+                    .append( valueAsString( entry.getValue() ) );
+
             if ( ++index != lastIndex ) {
                 builder.append( ", " );
             }
@@ -92,6 +97,75 @@ public final class JavannaInvocationHandler implements InvocationHandler {
         builder.append( ")" );
 
         return builder.toString();
+    }
+
+    private static String valueAsString( Object value ) {
+        // handle array of any type (Arrays.toString() requires us to know the type)
+        if ( value.getClass().isArray() ) {
+            int length = Array.getLength( value );
+            StringBuilder builder = new StringBuilder();
+            builder.append( "{" );
+            for (int i = 0; i < length - 1; i++) {
+                Object element = Array.get( value, i );
+                builder.append( valueAsString( element ) ).append( ", " );
+            }
+
+            // last element, if any
+            if ( length > 0 ) {
+                builder.append( Array.get( value, length - 1 ) );
+            }
+
+            return builder.append( "}" ).toString();
+        }
+        return value.toString();
+    }
+
+    private static boolean mapsAreEqual( Map<String, ?> values, Map<String, Object> otherValues ) {
+        if ( !values.keySet().equals( otherValues.keySet() ) ) {
+            return false;
+        }
+
+        // keys are equal, now check each value
+
+        for (Map.Entry<String, ?> entry : values.entrySet()) {
+            Object value1 = entry.getValue();
+            Object value2 = otherValues.get( entry.getKey() );
+            if ( !valuesAreEqual( value1, value2 ) ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean valuesAreEqual( Object first, Object second ) {
+        if ( first.getClass().isArray() ) {
+            if ( second.getClass().isArray() ) {
+                // both are arrays
+                int length1 = Array.getLength( first );
+                int length2 = Array.getLength( second );
+                if ( length1 != length2 ) {
+                    return false;
+                }
+                for (int i = 0; i < length1; i++) {
+                    Object child1 = Array.get( first, i );
+                    Object child2 = Array.get( second, i );
+                    if ( !valuesAreEqual( child1, child2 ) ) {
+                        return false;
+                    }
+                }
+
+                // all elements are the same
+                return true;
+            } else {
+                return false;
+            }
+        } else if ( second.getClass().isArray() ) {
+            return false;
+        } else {
+            // none is an array
+            return Objects.equals( first, second );
+        }
     }
 
 }
