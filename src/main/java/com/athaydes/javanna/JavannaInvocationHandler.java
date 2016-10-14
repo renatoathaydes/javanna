@@ -1,7 +1,4 @@
-package com.athaydes.javanna.internal;
-
-import com.athaydes.javanna.JavaAnnotation;
-import com.athaydes.javanna.Javanna;
+package com.athaydes.javanna;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -10,7 +7,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
 
-public final class JavannaInvocationHandler implements InvocationHandler {
+final class JavannaInvocationHandler implements InvocationHandler {
 
     private static final Method EQUALS_METHOD;
     private static final Method HASHCODE_METHOD;
@@ -31,7 +28,7 @@ public final class JavannaInvocationHandler implements InvocationHandler {
     private final JavaAnnotation<?> annotation;
     private final Map<String, ?> values;
 
-    public JavannaInvocationHandler( JavaAnnotation<?> annotation, Map<String, ?> values ) {
+    JavannaInvocationHandler( JavaAnnotation<?> annotation, Map<String, ?> values ) {
         this.annotation = annotation;
         this.values = values;
     }

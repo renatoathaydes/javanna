@@ -1,7 +1,5 @@
 package com.athaydes.javanna;
 
-import com.athaydes.javanna.internal.JavannaInvocationHandler;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
