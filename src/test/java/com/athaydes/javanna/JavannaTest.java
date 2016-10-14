@@ -241,7 +241,6 @@ public class JavannaTest {
         assertEquals( Arrays.toString( new boolean[]{ true, false } ), Arrays.toString( hasArrays.states() ) );
     }
 
-
     @Test
     public void cannotCreateAnnotationWithArrayValuesOfWrongType() throws Exception {
         try {
@@ -256,6 +255,34 @@ public class JavannaTest {
             assertEquals( "Type errors:\n" +
                             "* Type of member 'states' has invalid type. Expected: [Z. Found: [I",
                     e.getMessage() );
+        }
+    }
+
+    @Test
+    public void cannotCreateSimpleAnnotationWithNullValue() throws Exception {
+        try {
+            Javanna.createAnnotation( Simple.class, new HashMap<String, Object>() {{
+                put( "value", null );
+            }} );
+
+            fail( "Should have failed" );
+        } catch ( IllegalArgumentException e ) {
+            assertEquals( "Member 'value' contains illegal null item", e.getMessage() );
+        }
+    }
+
+    @Test
+    public void cannotCreateAnnotationWithNullArrayValue() throws Exception {
+        try {
+            Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
+                put( "numbers", new int[]{ 10, 5, 0 } );
+                put( "names", new String[]{ "hi", null } );
+                put( "states", new boolean[]{ true, false } );
+            }} );
+
+            fail( "Should have failed" );
+        } catch ( IllegalArgumentException e ) {
+            assertEquals( "Member 'names' contains illegal null item", e.getMessage() );
         }
     }
 

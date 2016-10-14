@@ -3,6 +3,7 @@ package com.athaydes.javanna;
 import com.athaydes.javanna.internal.JavannaInvocationHandler;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -149,9 +150,10 @@ public final class Javanna {
                 type = boxedType( type );
             }
             Object value = entry.getValue();
+            checkValue( member, value );
             if ( !type.isInstance( value ) ) {
                 errors.add( String.format( "Type of member '%s' has invalid type. Expected: %s. Found: %s",
-                        member, type.getName(), value == null ? "<null>" : value.getClass().getName() ) );
+                        member, type.getName(), value.getClass().getName() ) );
             }
         }
 
@@ -191,6 +193,19 @@ public final class Javanna {
             return Double.class;
 
         throw new IllegalStateException( "Not a primitive type: " + primitiveType );
+    }
+
+    private static void checkValue( String member, Object value ) {
+        if ( value == null ) {
+            throw new IllegalArgumentException( String.format( "Member '%s' contains illegal null item", member ) );
+        }
+        if ( value.getClass().isArray() ) {
+            int length = Array.getLength( value );
+            for (int i = 0; i < length; i++) {
+                Object item = Array.get( value, i );
+                checkValue( member, item );
+            }
+        }
     }
 
     private static String joinWith( String separator, Collection<String> values ) {
