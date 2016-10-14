@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Java annotation parser.
+ * Java annotation parser/creator.
  * <p>
  * No instance of this class can be created. It only contains static methods.
  */
@@ -28,7 +28,8 @@ public final class Javanna {
     /**
      * Parse the annotation class.
      *
-     * @param annotationType @interface of annotation to parse.
+     * @param annotationType {@code @interface} of annotation to parse.
+     * @param <A>            the type of the annotation
      * @return a {@link JavaAnnotation} representing the annotation.
      */
     public static <A extends Annotation> JavaAnnotation<A> parseAnnotation(
