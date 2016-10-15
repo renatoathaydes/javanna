@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -248,6 +249,13 @@ public final class Javanna {
 
             if ( type.isInstance( value ) ) {
                 return Either.success( value );
+            } else if ( Annotation.class.isAssignableFrom( type ) && value instanceof Map ) {
+                Map<?, ?> map = ( Map ) value;
+                Map<String, Object> typedMap = new HashMap<>( map.size() );
+                for (Map.Entry entry : map.entrySet()) {
+                    typedMap.put( entry.getKey().toString(), entry.getValue() );
+                }
+                return Either.success( createAnnotation( type.asSubclass( Annotation.class ), typedMap ) );
             } else {
                 return TypeConverter.coerce( value, type, String.format( "member '%s' has invalid type. Expected: %s. Found: %s.",
                         member, type.getName(), value.getClass().getName() ) );

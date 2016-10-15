@@ -148,6 +148,23 @@ public class JavannaTest {
     }
 
     @Test
+    public void canCreateComplexAnnotationUsingMapForInnerAnnotation() throws Exception {
+        Complex complex = Javanna.createAnnotation( Complex.class, new HashMap<String, Object>() {{
+            put( "name", "hello" );
+            put( "count", 6 );
+            put( "simple", new HashMap<String, Object>() {{
+                put( "value", "the-simple-one" );
+            }} );
+            put( "example", Example.LARGE );
+        }} );
+
+        assertEquals( "hello", complex.name() );
+        assertEquals( 6, complex.count() );
+        assertEquals( "the-simple-one", complex.simple().value() );
+        assertEquals( Example.LARGE, complex.example() );
+    }
+
+    @Test
     public void canCreateComplexAnnotationWithPartialValues() throws Exception {
         final Simple simple = Javanna.createAnnotation( Simple.class, new HashMap<String, Object>() {{
             put( "value", "the-simple-one" );
