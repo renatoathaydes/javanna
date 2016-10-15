@@ -8,6 +8,9 @@ Javanna-Gson allows you to map JSON to Java annotations.
 
 ## Getting started
 
+Javanna-Gson is on [JCenter](https://bintray.com/search?query=javanna-gson) and
+[Maven Central](http://search.maven.org/#search%7Cga%7C1%7Ccom.athaydes.javanna).
+
 ### Gradle
 
 ```groovy
