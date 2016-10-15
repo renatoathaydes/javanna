@@ -142,3 +142,23 @@ public void canReadComplexAnnotationValues() throws Exception {
     assertEquals( expectedValues, actualValues );
 }
 ```
+
+To extract annotation values recursively (eg. get the value of the `@Simple` annotation as a Map in the example above),
+just use the `getAnnotationValues(Annotation a, boolean recursive)` method:
+
+```java
+Map<String, Object> actualValues = Javanna.getAnnotationValues( complex, true );
+```
+
+In this case, the resulting Map would be:
+
+```java
+Map<String, Object> expectedValues = new LinkedHashMap<String, Object>() {{
+    put( "name", "hello" );
+    put( "count", 6 );
+    put( "simple", new LinkedHashMap<String, Object>() {{
+        put( "value", "hi" );
+    }} );
+    put( "example", Example.SMALL );
+}};
+```
