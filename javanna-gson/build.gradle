@@ -1,0 +1,118 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'osgi'
+}
+
+apply plugin: 'com.jfrog.bintray'
+
+group 'com.athaydes.javanna'
+version '1.0'
+description 'Library to convert between JSON and Java annotations at runtime.'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project( ':' )
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+jar {
+    manifest {
+        attributes(
+                "Implementation-Title": "Javanna-Gson",
+                "Implementation-Version": version )
+    }
+}
+
+/* Publishing config */
+
+task javadocJar( type: Jar ) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar( type: Jar ) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+// add all the info required by Maven Central to the pom
+configure( install.repositories.mavenInstaller ) {
+    pom.project {
+        inceptionYear '2016'
+        name project.name
+        packaging 'jar'
+        description project.description
+
+        url 'https://github.com/renatoathaydes/javanna/javanna-gson'
+
+        scm {
+            connection 'git@github.com:renatoathaydes/javanna.git'
+            developerConnection 'git@github.com:renatoathaydes/javanna.git'
+            url 'https://github.com/renatoathaydes/javanna/javanna-gson'
+        }
+
+        licenses {
+            license {
+                name 'The Apache License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+
+        developers {
+            developer {
+                id 'renatoathaydes'
+                name 'Renato Athaydes'
+                email 'renato@athaydes.com'
+            }
+        }
+    }
+}
+
+def getProjectProperty = { String propertyName ->
+    project.properties[ propertyName ]
+}
+
+bintray {
+    user = getProjectProperty "bintrayUserName"
+    key = getProjectProperty "bintrayApiKey"
+    configurations = [ 'archives' ]
+    publish = true
+    pkg {
+        repo = 'maven'
+        name = 'javanna-gson'
+        licenses = [ 'Apache-2.0' ]
+        desc = project.description
+        vcsUrl = 'https://github.com/renatoathaydes/javnna.git'
+        websiteUrl = 'https://github.com/renatoathaydes/javanna/javanna-gson'
+        issueTrackerUrl = 'https://github.com/renatoathaydes/javanna/issues'
+        labels = [ 'java', 'json', 'annotation', 'meta-programming' ]
+        publicDownloadNumbers = true
+
+        //noinspection GroovyAssignabilityCheck
+        version {
+            name = project.version
+            vcsTag = project.version
+            gpg {
+                sign = true
+            }
+            mavenCentralSync {
+                sync = true
+                user = getProjectProperty 'ossrhUsername'
+                password = getProjectProperty 'ossrhPassword'
+                close = '1' // '0' to NOT close
+            }
+        }
+    }
+}
+
+bintrayUpload.dependsOn build, sourcesJar
