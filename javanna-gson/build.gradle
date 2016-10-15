@@ -92,7 +92,7 @@ bintray {
         name = 'javanna-gson'
         licenses = [ 'Apache-2.0' ]
         desc = project.description
-        vcsUrl = 'https://github.com/renatoathaydes/javnna.git'
+        vcsUrl = 'https://github.com/renatoathaydes/javanna.git'
         websiteUrl = 'https://github.com/renatoathaydes/javanna/javanna-gson'
         issueTrackerUrl = 'https://github.com/renatoathaydes/javanna/issues'
         labels = [ 'java', 'json', 'annotation', 'meta-programming' ]

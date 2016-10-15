@@ -1,5 +1,5 @@
 plugins {
-    id "com.jfrog.bintray" version "1.7.2"
+    id "com.jfrog.bintray" version "1.6"
     id 'java'
     id 'maven'
     id 'osgi'
@@ -94,7 +94,7 @@ bintray {
         name = 'javanna'
         licenses = [ 'Apache-2.0' ]
         desc = project.description
-        vcsUrl = 'https://github.com/renatoathaydes/javnna.git'
+        vcsUrl = 'https://github.com/renatoathaydes/javanna.git'
         websiteUrl = 'https://github.com/renatoathaydes/javanna'
         issueTrackerUrl = 'https://github.com/renatoathaydes/javanna/issues'
         labels = [ 'java', 'annotation', 'meta-programming' ]
