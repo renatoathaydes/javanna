@@ -4,6 +4,8 @@ A Java library to create and introspect annotations at runtime.
 
 The whole library is just one class: `com.athaydes.javanna.Javanna`.
 
+> To map between Java annotations and JSON, see [Javanna-Gson](javanna-gson).
+
 ## Parse an annotation class
 
 Given the following example definitions:
