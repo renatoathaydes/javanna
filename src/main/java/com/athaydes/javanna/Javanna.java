@@ -88,12 +88,12 @@ public final class Javanna {
     public static <A extends Annotation> A createAnnotation(
             JavaAnnotation<A> annotation,
             Map<String, ?> values ) {
-        validateValues( annotation, values );
+        Map<String, ?> checkedValues = validateValues( annotation, values );
 
         try {
             return ( A ) Proxy.newProxyInstance( annotation.getAnnotationType().getClassLoader(),
                     new Class[]{ annotation.getAnnotationType() },
-                    new JavannaInvocationHandler( annotation, new LinkedHashMap<>( values ) ) );
+                    new JavannaInvocationHandler( annotation, checkedValues ) );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -119,8 +119,8 @@ public final class Javanna {
         }
     }
 
-    private static void validateValues( JavaAnnotation<?> annotation,
-                                        Map<String, ?> values ) {
+    private static Map<String, ?> validateValues( JavaAnnotation<?> annotation,
+                                                  Map<String, ?> values ) {
         Set<String> mandatoryMembers = diff( annotation.getMembers(), annotation.getDefaultValueByMember().keySet() );
         Set<String> missingMembers = diff( mandatoryMembers, values.keySet() );
 
@@ -140,25 +140,29 @@ public final class Javanna {
 
         Map<String, Class<?>> typeByMember = annotation.getTypeByMember();
 
+        Map<String, Object> result = new LinkedHashMap<>( values.size() );
         List<String> errors = new ArrayList<>( 1 );
 
         for (Map.Entry<String, ?> entry : values.entrySet()) {
             String member = entry.getKey();
             Class<?> type = typeByMember.get( member );
-            if ( type.isPrimitive() ) {
-                type = boxedType( type );
-            }
-            Object value = entry.getValue();
-            checkValue( member, value );
-            if ( !type.isInstance( value ) ) {
-                errors.add( String.format( "Type of member '%s' has invalid type. Expected: %s. Found: %s",
-                        member, type.getName(), value.getClass().getName() ) );
+
+            Either validationResult = checkValue( member, type, entry.getValue() );
+
+            if ( validationResult.isSuccess() ) {
+                if ( errors.isEmpty() ) { // if there's an error, result will be ignored
+                    result.put( member, validationResult.getValidResult() );
+                }
+            } else {
+                errors.add( validationResult.getFailure() );
             }
         }
 
-        if ( !errors.isEmpty() ) {
+        if ( errors.isEmpty() ) {
+            return result;
+        } else {
             StringBuilder builder = new StringBuilder();
-            builder.append( "Type errors:" );
+            builder.append( "Errors:" );
             for (String error : errors) {
                 builder.append( "\n* " ).append( error );
             }
@@ -194,15 +198,40 @@ public final class Javanna {
         throw new IllegalStateException( "Not a primitive type: " + primitiveType );
     }
 
-    private static void checkValue( String member, Object value ) {
+    private static Either checkValue( String member, Class<?> type, Object value ) {
         if ( value == null ) {
-            throw new IllegalArgumentException( String.format( "Member '%s' contains illegal null item", member ) );
+            return Either.failure( String.format( "member '%s' contains illegal null item.", member ) );
         }
         if ( value.getClass().isArray() ) {
-            int length = Array.getLength( value );
-            for (int i = 0; i < length; i++) {
-                Object item = Array.get( value, i );
-                checkValue( member, item );
+            if ( value.getClass().equals( type ) ) {
+                int length = Array.getLength( value );
+                Class<?> itemType = type.getComponentType();
+                Object newArray = Array.newInstance( itemType, length );
+                for (int i = 0; i < length; i++) {
+                    Object item = Array.get( value, i );
+                    String indexedMember = String.format( "%s[%d]", member, i );
+                    Either itemValidationResult = checkValue( indexedMember, itemType, item );
+                    if ( !itemValidationResult.isSuccess() ) {
+                        return itemValidationResult;
+                    }
+                    Array.set( newArray, i, itemValidationResult.getValidResult() );
+                }
+                return Either.success( newArray );
+            } else {
+                return Either.failure( String.format( "member '%s' has invalid type. Expected: %s. Found: %s.",
+                        member, type.getName(), value.getClass().getName() ) );
+            }
+        } else {
+            // simple values are boxed, so if the expected type is primitive, turn it into its boxed equivalent
+            if ( type.isPrimitive() ) {
+                type = boxedType( type );
+            }
+
+            if ( type.isInstance( value ) ) {
+                return Either.success( value );
+            } else {
+                return TypeConverter.coerce( value, type, String.format( "member '%s' has invalid type. Expected: %s. Found: %s.",
+                        member, type.getName(), value.getClass().getName() ) );
             }
         }
     }

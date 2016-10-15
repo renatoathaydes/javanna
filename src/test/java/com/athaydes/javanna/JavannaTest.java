@@ -165,6 +165,22 @@ public class JavannaTest {
     }
 
     @Test
+    public void canCreateComplexAnnotationWithNumbersOfConvertibleTypes() throws Exception {
+        final Simple simple = Javanna.createAnnotation( Simple.class, new HashMap<String, Object>() {{
+            put( "value", "the-simple-one" );
+        }} );
+
+        Complex complex = Javanna.createAnnotation( Complex.class, new HashMap<String, Object>() {{
+            put( "name", "hello" );
+            put( "count", 42.0f );
+            put( "simple", simple );
+            put( "example", Example.LARGE );
+        }} );
+
+        assertEquals( 42, complex.count() );
+    }
+
+    @Test
     public void cannotCreateSimpleAnnotationWithNonExistingMemberValues() throws Exception {
         try {
             Javanna.createAnnotation( Simple.class, new HashMap<String, Object>() {{
@@ -209,10 +225,10 @@ public class JavannaTest {
 
             fail( "Should have failed" );
         } catch ( IllegalArgumentException e ) {
-            assertEquals( "Type errors:\n" +
-                    "* Type of member 'name' has invalid type. Expected: java.lang.String. Found: java.lang.Character\n" +
-                    "* Type of member 'example' has invalid type. Expected: com.athaydes.javanna.JavannaTest$Example. " +
-                    "Found: java.lang.Float", e.getMessage() );
+            assertEquals( "Errors:\n" +
+                    "* member 'name' has invalid type. Expected: java.lang.String. Found: java.lang.Character.\n" +
+                    "* member 'example' has invalid type. Expected: com.athaydes.javanna.JavannaTest$Example. " +
+                    "Found: java.lang.Float.", e.getMessage() );
         }
     }
 
@@ -252,8 +268,8 @@ public class JavannaTest {
 
             fail( "Should have failed" );
         } catch ( IllegalArgumentException e ) {
-            assertEquals( "Type errors:\n" +
-                            "* Type of member 'states' has invalid type. Expected: [Z. Found: [I",
+            assertEquals( "Errors:\n" +
+                            "* member 'states' has invalid type. Expected: [Z. Found: [I.",
                     e.getMessage() );
         }
     }
@@ -267,7 +283,7 @@ public class JavannaTest {
 
             fail( "Should have failed" );
         } catch ( IllegalArgumentException e ) {
-            assertEquals( "Member 'value' contains illegal null item", e.getMessage() );
+            assertEquals( "Errors:\n* member 'value' contains illegal null item.", e.getMessage() );
         }
     }
 
@@ -282,7 +298,7 @@ public class JavannaTest {
 
             fail( "Should have failed" );
         } catch ( IllegalArgumentException e ) {
-            assertEquals( "Member 'names' contains illegal null item", e.getMessage() );
+            assertEquals( "Errors:\n* member 'names[1]' contains illegal null item.", e.getMessage() );
         }
     }
 
