@@ -102,21 +102,46 @@ public final class Javanna {
 
     /**
      * Get the values of this annotation's members.
+     * <p>
+     * Use {@link #getAnnotationValues(Annotation, boolean)} to extract the values of inner annotations.
      *
      * @param annotation annotation
      * @return a Map of the values of this annotation by its member names.
      */
     public static Map<String, Object> getAnnotationValues( Annotation annotation ) {
+        return getAnnotationValues( annotation, false );
+    }
+
+    /**
+     * Get the values of this annotation's members.
+     * <p>
+     * If {@code recursive} is true, call this method recursively on any annotation
+     * instances found within the annotation's members.
+     *
+     * @param annotation annotation
+     * @param recursive  if true, call this method recursively on inner annotations.
+     * @return a Map of the values of this annotation by its member names.
+     */
+    public static Map<String, Object> getAnnotationValues( Annotation annotation,
+                                                           boolean recursive ) {
+
         Map<String, Object> result = new LinkedHashMap<>();
         Method[] methods = annotation.annotationType().getDeclaredMethods();
-
+        Method currentMethod = null;
         try {
             for (Method method : methods) {
-                result.put( method.getName(), method.invoke( annotation ) );
+                currentMethod = method;
+                method.setAccessible( true );
+                Object value = method.invoke( annotation );
+                if ( recursive && value instanceof Annotation ) {
+                    value = getAnnotationValues( ( Annotation ) value, true );
+                }
+                result.put( method.getName(), value );
             }
             return result;
         } catch ( IllegalAccessException | InvocationTargetException e ) {
-            throw new IllegalStateException( "Unexpected error invoking annotation member methods", e );
+            throw new IllegalStateException( "Unexpected error invoking annotation member method " +
+                    currentMethod.getName() + "() on annotation: " + annotation, e );
         }
     }
 

@@ -357,4 +357,51 @@ public class JavannaTest {
         assertEquals( expectedValues, Javanna.getAnnotationValues( complex ) );
     }
 
+    @Test
+    public void canReadComplexAnnotationValuesFromJavannaAnnotation() throws Exception {
+        final Simple simple = Javanna.createAnnotation( Simple.class, new LinkedHashMap<String, Object>() {{
+            put( "value", "the-simple-one" );
+        }} );
+
+        Complex complex = Javanna.createAnnotation( Complex.class, new LinkedHashMap<String, Object>() {{
+            put( "name", "joe" );
+            put( "count", 2 );
+            put( "simple", simple );
+            put( "example", Example.XXX );
+        }} );
+
+        Map<String, Object> expectedValues = new LinkedHashMap<String, Object>() {{
+            put( "name", "joe" );
+            put( "count", 2 );
+            put( "simple", simple );
+            put( "example", Example.XXX );
+        }};
+
+        assertEquals( expectedValues, Javanna.getAnnotationValues( complex ) );
+    }
+
+    @Test
+    public void canReadComplexAnnotationValuesFromJavannaAnnotationRecursively() throws Exception {
+        final Simple simple = Javanna.createAnnotation( Simple.class, new LinkedHashMap<String, Object>() {{
+            put( "value", "simple-one" );
+        }} );
+
+        Complex complex = Javanna.createAnnotation( Complex.class, new LinkedHashMap<String, Object>() {{
+            put( "count", 400 );
+            put( "simple", simple );
+            put( "example", Example.SMALL );
+        }} );
+
+        Map<String, Object> expectedValues = new LinkedHashMap<String, Object>() {{
+            put( "name", "default-name" );
+            put( "count", 400 );
+            put( "simple", new LinkedHashMap<String, Object>() {{
+                put( "value", "simple-one" );
+            }} );
+            put( "example", Example.SMALL );
+        }};
+
+        assertEquals( expectedValues, Javanna.getAnnotationValues( complex, true ) );
+    }
+
 }
