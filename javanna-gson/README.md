@@ -6,6 +6,26 @@ Leveraging [Javanna](https://github.com/renatoathaydes/javanna) to read and crea
 and [Gson](https://github.com/google/gson) to parse and write JSON documents,
 Javanna-Gson allows you to map JSON to Java annotations.
 
+## Getting started
+
+### Gradle
+
+```groovy
+dependencies {
+    compile "com.athaydes.javanna:javanna-gson:1.0"
+}
+```
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>com.athaydes.javanna</groupId>
+  <artifactId>javanna-gson</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
 ## Parsing JSON into an annotation type
 
 The whole library is one class: `com.athaydes.javanna.gson.JavannaGson`.

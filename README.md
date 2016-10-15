@@ -6,6 +6,26 @@ The whole library is just one class: `com.athaydes.javanna.Javanna`.
 
 > To map between Java annotations and JSON, see [Javanna-Gson](javanna-gson).
 
+## Getting started
+
+### Gradle
+
+```groovy
+dependencies {
+    compile "com.athaydes.javanna:javanna:1.1"
+}
+```
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>com.athaydes.javanna</groupId>
+  <artifactId>javanna</artifactId>
+  <version>1.1</version>
+</dependency>
+```
+
 ## Parse an annotation class
 
 Given the following example definitions:
