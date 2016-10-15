@@ -202,13 +202,32 @@ public final class Javanna {
         if ( value == null ) {
             return Either.failure( String.format( "member '%s' contains illegal null item.", member ) );
         }
-        if ( value.getClass().isArray() ) {
-            if ( value.getClass().equals( type ) ) {
-                int length = Array.getLength( value );
+
+        boolean isArrayValue = value.getClass().isArray();
+
+        if ( ( isArrayValue && value.getClass().equals( type ) )
+                || value instanceof Collection ) {
+            if ( type.isArray() ) {
+                int length;
+                Iterator<?> iterator = null;
+
+                if ( isArrayValue ) {
+                    length = Array.getLength( value );
+                } else {
+                    Collection collection = ( Collection ) value;
+                    length = collection.size();
+                    iterator = collection.iterator();
+                }
+
                 Class<?> itemType = type.getComponentType();
                 Object newArray = Array.newInstance( itemType, length );
                 for (int i = 0; i < length; i++) {
-                    Object item = Array.get( value, i );
+                    Object item;
+                    if ( isArrayValue ) {
+                        item = Array.get( value, i );
+                    } else {
+                        item = iterator.next();
+                    }
                     String indexedMember = String.format( "%s[%d]", member, i );
                     Either itemValidationResult = checkValue( indexedMember, itemType, item );
                     if ( !itemValidationResult.isSuccess() ) {

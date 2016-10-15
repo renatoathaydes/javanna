@@ -246,6 +246,19 @@ public class JavannaTest {
     }
 
     @Test
+    public void canCreateAnnotationWithCollectionValues() throws Exception {
+        HasArrays hasArrays = Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
+            put( "numbers", Arrays.asList( 10, 5, 0 ) );
+            put( "names", Collections.singleton( "hi" ) );
+            put( "states", Collections.emptyList() );
+        }} );
+
+        assertEquals( Arrays.toString( new int[]{ 10, 5, 0 } ), Arrays.toString( hasArrays.numbers() ) );
+        assertEquals( Arrays.toString( new String[]{ "hi" } ), Arrays.toString( hasArrays.names() ) );
+        assertEquals( Arrays.toString( new boolean[ 0 ] ), Arrays.toString( hasArrays.states() ) );
+    }
+
+    @Test
     public void canCreateAnnotationWithPartialArrayValues() throws Exception {
         HasArrays hasArrays = Javanna.createAnnotation( HasArrays.class, new HashMap<String, Object>() {{
             put( "numbers", new int[]{ 10, 5, 0 } );
