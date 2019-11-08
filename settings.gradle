@@ -1,3 +1,4 @@
 rootProject.name = 'javanna'
 include 'javanna-gson'
+include 'javanna-jackson'
 
