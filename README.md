@@ -99,16 +99,43 @@ Complex complex = Javanna.createAnnotation( Complex.class, new HashMap<String, O
     put( "simple", simple );
     put( "example", Example.LARGE );
 }} );
-
-// use the annotation as if it were a normal annotation instance
-assertEquals( "hello", complex.name() );
-assertEquals( 6, complex.count() );
-assertEquals( "the-simple-one", complex.simple().value() );
-assertEquals( Example.LARGE, complex.example() );
 ```
 
 > It is an error to not provide mandatory values, or to give invalid members or values of the wrong type. All errors
   cause an `IllegalArgumentException` to be thrown by the `createAnnotation` method.
+
+The above is too verbose, not to mention it's not type-safe!
+
+But that can be easily wrapped into a factory method to make it both type-safe and nicer to use:
+
+```java
+static Simple Simple( String value ) {
+    Map<String, Object> map = new HashMap<>( 1 );
+    map.put( "value", value );
+    return Javanna.createAnnotation( Simple.class, map );
+}
+
+static Complex Complex( String name, int count, Simple simple, Example example ) {
+    Map<String, Object> map = new HashMap<>( 4 );
+    map.put( "name", name );
+    map.put( "count", count );
+    map.put( "simple", simple );
+    map.put( "example", example );
+    return Javanna.createAnnotation( Complex.class, map );
+}
+
+// create an instance of Complex
+Complex complex = Complex( "joe", 42, Simple( "yes" ), Example.MEDIUM );
+```
+
+Of course, the annotation instance can be used as just a normal object:
+
+```java
+assertEquals( complex.name(), "joe" );
+assertEquals( complex.count(), 42 );
+assertEquals( complex.simple().value(), "yes" );
+assertEquals( complex.example(), Example.MEDIUM );
+```
 
 ## Read the values of an annotation instance as a Map
 

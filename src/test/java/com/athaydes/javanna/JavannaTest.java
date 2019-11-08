@@ -51,6 +51,21 @@ public class JavannaTest {
         boolean[] states() default { true, false };
     }
 
+    static Simple Simple( String value ) {
+        Map<String, Object> map = new HashMap<>( 1 );
+        map.put( "value", value );
+        return Javanna.createAnnotation( Simple.class, map );
+    }
+
+    static Complex Complex( String name, int count, Simple simple, Example example ) {
+        Map<String, Object> map = new HashMap<>( 4 );
+        map.put( "name", name );
+        map.put( "count", count );
+        map.put( "simple", simple );
+        map.put( "example", example );
+        return Javanna.createAnnotation( Complex.class, map );
+    }
+
     @Test
     public void canParseEmptyAnnotation() throws Exception {
         JavaAnnotation<Empty> annotation = Javanna.parseAnnotation( Empty.class );
@@ -402,6 +417,15 @@ public class JavannaTest {
         }};
 
         assertEquals( expectedValues, Javanna.getAnnotationValues( complex, true ) );
+    }
+
+    @Test
+    public void canCreateAnnotationsUsingStaticFactoryMethods() {
+        Complex complex = Complex( "joe", 42, Simple( "yes" ), Example.MEDIUM );
+        assertEquals( complex.name(), "joe" );
+        assertEquals( complex.count(), 42 );
+        assertEquals( complex.simple().value(), "yes" );
+        assertEquals( complex.example(), Example.MEDIUM );
     }
 
 }
