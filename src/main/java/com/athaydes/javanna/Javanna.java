@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +40,7 @@ public final class Javanna {
         Map<String, Class<?>> typeByMember = new LinkedHashMap<>();
 
         Method[] methods = annotationType.getDeclaredMethods();
-        for (Method method : methods) {
+        for ( Method method : methods ) {
             try {
                 String memberName = method.getName();
                 Object memberDefaultValue = method.getDefaultValue();
@@ -129,7 +130,7 @@ public final class Javanna {
         Method[] methods = annotation.annotationType().getDeclaredMethods();
         Method currentMethod = null;
         try {
-            for (Method method : methods) {
+            for ( Method method : methods ) {
                 currentMethod = method;
                 method.setAccessible( true );
                 Object value = method.invoke( annotation );
@@ -169,7 +170,7 @@ public final class Javanna {
         Map<String, Object> result = new LinkedHashMap<>( values.size() );
         List<String> errors = new ArrayList<>( 1 );
 
-        for (Map.Entry<String, ?> entry : values.entrySet()) {
+        for ( Map.Entry<String, ?> entry : values.entrySet() ) {
             String member = entry.getKey();
             Class<?> type = typeByMember.get( member );
 
@@ -185,11 +186,11 @@ public final class Javanna {
         }
 
         if ( errors.isEmpty() ) {
-            return result;
+            return Collections.unmodifiableMap( result );
         } else {
             StringBuilder builder = new StringBuilder();
             builder.append( "Errors:" );
-            for (String error : errors) {
+            for ( String error : errors ) {
                 builder.append( "\n* " ).append( error );
             }
             throw new IllegalArgumentException( builder.toString() );
@@ -247,7 +248,7 @@ public final class Javanna {
 
                 Class<?> itemType = type.getComponentType();
                 Object newArray = Array.newInstance( itemType, length );
-                for (int i = 0; i < length; i++) {
+                for ( int i = 0; i < length; i++ ) {
                     Object item;
                     if ( isArrayValue ) {
                         item = Array.get( value, i );
@@ -277,7 +278,7 @@ public final class Javanna {
             } else if ( Annotation.class.isAssignableFrom( type ) && value instanceof Map ) {
                 Map<?, ?> map = ( Map ) value;
                 Map<String, Object> typedMap = new HashMap<>( map.size() );
-                for (Map.Entry entry : map.entrySet()) {
+                for ( Map.Entry entry : map.entrySet() ) {
                     typedMap.put( entry.getKey().toString(), entry.getValue() );
                 }
                 return Either.success( createAnnotation( type.asSubclass( Annotation.class ), typedMap ) );
