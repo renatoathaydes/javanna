@@ -3,13 +3,16 @@ package com.athaydes.javanna.jackson;
 import com.athaydes.javanna.JavaAnnotation;
 import com.athaydes.javanna.Javanna;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -134,6 +137,8 @@ public class JavannaJackson {
                     }
                     throw new IncompatibleJsonException( "Expected member (" + member + ") to have value of type " +
                             memberType.getName() + " but found String of length > 1 at " + location( parser ) );
+                } else if ( memberType.isEnum() ) {
+                    return Enum.valueOf( memberType.asSubclass( Enum.class ), parser.getValueAsString() );
                 } else {
                     throw new IncompatibleJsonException( "Expected member (" + member + ") to have value of type " +
                             memberType.getName() + " but found String at " + location( parser ) );
@@ -203,28 +208,86 @@ public class JavannaJackson {
         return "line " + loc.getLineNr() + ", column " + loc.getColumnNr();
     }
 
-    //
-//    /**
-//     * Convert the given annotation instance to a JSON String.
-//     *
-//     * @param annotation annotation to read.
-//     * @return JSON String.
-//     */
-//    public String toJson( Annotation annotation ) {
-//        return gson.toJson( Javanna.getAnnotationValues( annotation, true ) );
-//    }
-//
-//    /**
-//     * Convert the given annotation instance to a JSON document and write it using the provided writer.
-//     *
-//     * @param annotation annotation to read.
-//     * @throws JsonIOException if Gson throws.
-//     */
-//    public void toJson( Annotation annotation, Appendable writer )
-//            throws JsonIOException {
-//        gson.toJson( Javanna.getAnnotationValues( annotation, true ), writer );
-//    }
-//
+
+    /**
+     * Convert the given annotation instance to a JSON String.
+     *
+     * @param annotation annotation to read.
+     * @return JSON String.
+     */
+    public String toJson( Annotation annotation ) {
+        StringWriter writer = new StringWriter();
+        try {
+            toJson( annotation, factory.createGenerator( writer ) );
+        } catch ( IOException e ) {
+            // this can't happen as there's no IO being done
+            throw new RuntimeException( e );
+        }
+        return writer.toString();
+    }
+
+    /**
+     * Convert the given annotation instance to a JSON document and write it using the provided writer.
+     *
+     * @param annotation annotation to read.
+     * @throws IOException if an error occurs while writing out
+     */
+    public void toJson( Annotation annotation, OutputStream writer ) throws IOException {
+        toJson( annotation, factory.createGenerator( writer ) );
+    }
+
+    private static void toJson( Annotation annotation, JsonGenerator generator ) throws IOException {
+        Map<String, Object> annotationMap = Javanna.getAnnotationValues( annotation, true );
+        try {
+            writeObject( annotationMap, generator );
+        } finally {
+            generator.close();
+        }
+    }
+
+    private static void writeObject( Map<?, ?> map, JsonGenerator generator ) throws IOException {
+        generator.writeStartObject();
+        for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+            generator.writeFieldName( ( String ) entry.getKey() );
+            writeValue( entry.getValue(), generator );
+        }
+        generator.writeEndObject();
+    }
+
+    private static void writeValue( Object value, JsonGenerator generator ) throws IOException {
+        // we only need to handle the types allowed in annotations by the Java compiler
+        if ( value instanceof Float ) {
+            generator.writeNumber( ( float ) value );
+        } else if ( value instanceof Double ) {
+            generator.writeNumber( ( double ) value );
+        } else if ( value instanceof Number ) {
+            generator.writeNumber( ( ( Number ) value ).longValue() );
+        } else if ( value instanceof String || value instanceof Character ) {
+            generator.writeString( value.toString() );
+        } else if ( value instanceof Boolean ) {
+            generator.writeBoolean( ( boolean ) value );
+        } else if ( value instanceof Enum<?> ) {
+            generator.writeString( ( ( Enum<?> ) value ).name() );
+        } else if ( value instanceof Map ) {
+            writeObject( ( Map<?, ?> ) value, generator );
+        } else if ( value != null && value.getClass().isArray() ) {
+            writeArray( value, generator );
+        } else {
+            throw new IllegalArgumentException( value == null ? "Null value cannot be serialized" :
+                    "Value of type which cannot be serialized to JSON: " + value.getClass() );
+        }
+    }
+
+    private static void writeArray( Object value, JsonGenerator generator ) throws IOException {
+        int length = Array.getLength( value );
+
+        generator.writeStartArray( length );
+        for ( int i = 0; i < length; i++ ) {
+            writeValue( Array.get( value, i ), generator );
+        }
+        generator.writeEndArray();
+    }
+
     private static <A extends Annotation> A createAnnotation(
             Class<A> annotation, Map<?, ?> map ) {
         Map<String, Object> typedMap = new HashMap<>( map.size() );
